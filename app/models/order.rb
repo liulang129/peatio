@@ -18,7 +18,7 @@ class Order < ActiveRecord::Base
   validates :origin_volume, numericality: { greater_than: 0.to_d }
   validates :price, numericality: { greater_than: 0 }, if: ->(order) { order.ord_type == 'limit' }
   validate  :market_order_validations, if: ->(order) { order.ord_type == 'market' }
-  
+
   WAIT   = 'wait'
   DONE   = 'done'
   CANCEL = 'cancel'
@@ -27,6 +27,8 @@ class Order < ActiveRecord::Base
   scope :active, -> { with_state(:wait) }
 
   before_validation(on: :create) { self.fee = config.public_send("#{kind}_fee") }
+
+  belongs_to :fee_currency, class_name: 'Currency', required: false
 
   after_commit on: :create do
     next unless ord_type == 'limit'
@@ -120,6 +122,20 @@ class Order < ActiveRecord::Base
     end
   end
 
+  def calculate_fee(value)
+    # binding.pry
+    return bid_fee(value) if fee_currency.nil?
+
+    utility_fee(value)
+    # Fallback to bid_fee
+    # rescue NotEnoughUtilityBalance
+    #   return bid_fee(value)
+  end
+
+  def fee_currency_account
+    Account.where(member: member, currency: fee_currency)
+  end
+
   private
 
   def is_limit_order?
@@ -153,10 +169,23 @@ class Order < ActiveRecord::Base
     required_funds
   end
 
+  def bid_fee(value)
+    value * fee
+  end
+
+  # TODO: Return the utility currency price of the current market.
+  def utility_price
+    0.3
+  end
+
+  #  TODO: implement the right fee logic.
+  def utility_fee(value)
+    value * fee * utility_price
+  end
 end
 
 # == Schema Information
-# Schema version: 20180813105100
+# Schema version: 20181120113445
 #
 # Table name: orders
 #

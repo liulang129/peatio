@@ -169,4 +169,13 @@ describe Matching::Executor do
       end.not_to change(Trade, :count)
     end
   end
+
+  context 'pay fee with utility currency' do
+    let(:ask) { create(:order_ask, price: price, volume: 1, member: alice, fee_currency: Currency.find(:trst)) }
+    let(:bid) { create(:order_bid, price: price, volume: 1, member: bob) }
+
+    it 'should charge fee from utility currency balance' do
+      binding.pry
+    end
+  end
 end

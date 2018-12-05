@@ -51,7 +51,7 @@ class OrderBid < Order
 end
 
 # == Schema Information
-# Schema version: 20180813105100
+# Schema version: 20181204145058
 #
 # Table name: orders
 #
@@ -63,6 +63,7 @@ end
 #  volume         :decimal(32, 16)  not null
 #  origin_volume  :decimal(32, 16)  not null
 #  fee            :decimal(32, 16)  default(0.0), not null
+#  fee_source     :string           default("bid")
 #  state          :integer          not null
 #  type           :string(8)        not null
 #  member_id      :integer          not null
