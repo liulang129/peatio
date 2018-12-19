@@ -112,11 +112,28 @@ module BlockchainClient
     memoize :connection
 
     def json_rpc(method, params = [])
-      response = connection.post \
-        '/',
-        { jsonrpc: '2.0', id: rpc_call_id, method: method, params: params }.to_json,
-        { 'Accept'       => 'application/json',
-          'Content-Type' => 'application/json' }
+      # Docker for Mac seems to have an issue with large # of connections. Here's a potential explanation:
+      # https://tech.xing.com/a-reason-for-unexplained-connection-timeouts-on-kubernetes-docker-abd041cf7e02
+      # Retry a few times before failing.
+      num_retries = 3
+      for i in 1..num_retries
+        begin
+          response = connection.post do |req|
+            req.url '/'
+            req.body = { jsonrpc: '2.0', id: rpc_call_id, method: method, params: params }.to_json
+            req.headers['Accept'] = 'application/json'
+            req.headers['Content-Type'] = 'application/json'
+
+            # Use a short timeout so it fails faster.
+            req.options.open_timeout = 2
+          end
+          break
+        rescue Faraday::ConnectionFailed
+          raise if i == num_retries
+          Rails.logger.warn { 'Connection to geth failed. Retrying...' }
+        end
+      end
+
       response.assert_success!
       response = JSON.parse(response.body)
       response['error'].tap { |error| raise Error, error.inspect if error }
