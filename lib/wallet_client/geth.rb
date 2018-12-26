@@ -54,6 +54,7 @@ module WalletClient
           {
             from:     normalize_address(issuer.fetch(:address)),
             to:       options[:contract_address],
+            value:    '0x' + 0.to_s(16),
             data:     data,
             gas:      '0x' + require_param!(options, :gas_limit).to_i.to_s(16),
             gasPrice: '0x' + require_param!(options, :gas_price).to_i.to_s(16)
