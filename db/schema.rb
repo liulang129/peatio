@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181219133822) do
+ActiveRecord::Schema.define(version: 20181228000422) do
 
   create_table "accounts", force: :cascade do |t|
     t.integer  "member_id",   limit: 4,                                          null: false
@@ -166,6 +166,20 @@ ActiveRecord::Schema.define(version: 20181219133822) do
 
   add_index "members", ["email"], name: "index_members_on_email", unique: true, using: :btree
 
+  create_table "mw_deposit_sessions", force: :cascade do |t|
+    t.string   "txid",             limit: 36
+    t.integer  "member_id",        limit: 4
+    t.decimal  "amount",                         precision: 32, scale: 16
+    t.text     "received_payload", limit: 65535
+    t.text     "response_payload", limit: 65535
+    t.string   "output",           limit: 33
+    t.string   "inputs",           limit: 33,                              default: "--- []\n"
+    t.datetime "created_at",                                                                    null: false
+    t.datetime "updated_at",                                                                    null: false
+  end
+
+  add_index "mw_deposit_sessions", ["member_id"], name: "index_mw_deposit_sessions_on_member_id", using: :btree
+
   create_table "orders", force: :cascade do |t|
     t.string   "bid",            limit: 10,                                         null: false
     t.string   "ask",            limit: 10,                                         null: false
@@ -240,7 +254,7 @@ ActiveRecord::Schema.define(version: 20181219133822) do
 
   create_table "wallets", force: :cascade do |t|
     t.string   "blockchain_key", limit: 32
-    t.string   "currency_id",    limit: 5
+    t.string   "currency_id",    limit: 10
     t.string   "name",           limit: 64
     t.string   "address",        limit: 255,                                           null: false
     t.integer  "kind",           limit: 4,                                             null: false
